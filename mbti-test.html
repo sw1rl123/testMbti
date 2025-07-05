@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Точный тест MBTI по функциям</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .question {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            width: 100%;
+        }
+        #result {
+            margin-top: 25px;
+            padding: 15px;
+            background: #e9f7ef;
+            border-radius: 8px;
+            display: none;
+        }
+        .func-score {
+            margin: 5px 0;
+            padding: 3px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+        h2 {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Точный тест MBTI (по функциям)</h1>
+    <div id="quiz"></div>
+    <button onclick="calculateResult()">Определить мой тип</button>
+    <div id="result"></div>
+
+    <script>
+        // Все вопросы с привязкой к функциям
+        const questions = [
+            { text: "Вы любите испытывать яркие и живые впечатления, будь то путешествия или приключения.", func: "Se" },
+            { text: "Вам сложно менять свои привычки и адаптироваться к новым условиям.", func: "Si" },
+            { text: "Вам важно, чтобы люди вокруг вас чувствовали себя счастливыми.", func: "Fe" },
+            { text: "Вам сложно объяснить свои идеи, потому что они приходят вам в виде внезапных озарений.", func: "Ni" },
+            { text: "Вы предпочитаете проверенные методы, а не эксперименты.", func: "Si" },
+            { text: "Вы любите анализировать, что стоит за вещами и как они устроены.", func: "Ti" },
+            { text: "Вам важно понять глубинный смысл вещей, а не просто их поверхностную суть.", func: "Ni" },
+            { text: "Вы предпочитаете учитывать мнение группы при принятии решений.", func: "Fe" },
+            { text: "Вы склонны оценивать людей и ситуации с точки зрения их эффективности и практичности.", func: "Te" },
+            { text: "Вам нравится разгадывать сложные концепции и философские вопросы.", func: "Ni" },
+            { text: "Вы любите физическую активность и наслаждаетесь моментом.", func: "Se" },
+            { text: "Вы часто ищете логику и связи даже в самых мелких деталях.", func: "Ti" },
+            { text: "Вы предпочитаете действовать по плану, а не импровизировать.", func: "Te" },
+            { text: "Вам кажется, что вы видите скрытые закономерности, которых не замечают другие.", func: "Ni" },
+            { text: "Вы часто оцениваете поступки людей с точки зрения их моральной стороны.", func: "Fi" },
+            { text: "Вам важно, чтобы все было организовано и привычно.", func: "Si" },
+            { text: "Вы часто размышляете о том, как работают разные вещи или идеи.", func: "Ti" },
+            { text: "Вам нравится делать что-то активное, что дарит яркие ощущения.", func: "Se" },
+            { text: "Вы любите рассматривать разные возможности и всегда открыты для новых идей.", func: "Ne" },
+            { text: "Вам кажется, что ваша интуиция ведет вас в правильном направлении.", func: "Ni" },
+            { text: "Вы глубоко переживаете личные эмоции, но редко показываете их другим.", func: "Fi" },
+            { text: "Вы можете долго размышлять над проблемой, прежде чем принять решение.", func: "Ti" },
+            { text: "Вам важно, чтобы ваши решения были эффективными и приносили конкретные результаты.", func: "Te" },
+            { text: "Вам нравится рассматривать нестандартные способы решения задач.", func: "Ne" },
+            { text: "Вы чувствуете, когда в группе есть напряжение, и стараетесь его убрать.", func: "Fe" },
+            { text: "Вам легче объяснять что-то людям с точки зрения фактов, а не чувств.", func: "Te" },
+            { text: "Вам комфортно в ситуациях, где нужно действовать, а не размышлять.", func: "Se" },
+            { text: "Вам быстро становится скучно, если приходится долго заниматься одним и тем же.", func: "Ne" },
+            { text: "Вы легко находите общий язык с людьми и стараетесь понять их потребности и эмоции.", func: "Fe" },
+            { text: "Вы часто используете прошлые события, чтобы избежать ошибок в будущем.", func: "Si" },
+            { text: "Вы предпочитаете планировать на долгосрочную перспективу, основываясь на своих предчувствиях.", func: "Ni" },
+            { text: "Вы не любите компромиссы, если они идут против ваших ценностей.", func: "Fi" },
+            { text: "Вам нравится брать на себя ответственность за организацию работы и управление проектами.", func: "Te" },
+            { text: "Вам приятно, когда ваши усилия признают и одобряют другие люди.", func: "Fe" },
+            { text: "Вам важно, чтобы все было знакомо и не изменялось без необходимости.", func: "Si" },
+            { text: "Вы часто задаетесь вопросами «почему» и стремитесь докопаться до сути вещей.", func: "Ti" },
+            { text: "Вы придерживаетесь своих собственных принципов, даже если это не всегда поддерживают другие.", func: "Fi" },
+            { text: "Вам интересно понять, как все устроено на глубоком уровне, а не просто принять это как есть.", func: "Ti" },
+            { text: "Вам важно, чтобы все было привычно и надежно, это дает ощущение безопасности.", func: "Si" },
+            { text: "Вам нравится обсуждать абстрактные концепции и идеи.", func: "Ne" },
+            { text: "Вы часто обращаете внимание на чувства других людей, когда принимаете решения.", func: "Fe" },
+            { text: "Вам нравится быть в настоящем моменте и наслаждаться тем, что происходит вокруг.", func: "Se" },
+            { text: "Вы быстро принимаете решения, основываясь на объективных данных, а не на эмоциях.", func: "Te" },
+            { text: "Вы легко видите связи между, казалось бы, несвязанными вещами.", func: "Ne" },
+            { text: "Вы предпочитаете следовать своим внутренним ценностям, даже если это затрудняет общение с другими.", func: "Fi" },
+            { text: "Вы часто раздумываете о будущем и возможных сценариях развития событий.", func: "Ni" },
+            { text: "Вам сложно действовать против своих принципов, даже если это приведет к конфликтам.", func: "Fi" },
+            { text: "Вам нравится думать о различных возможностях, даже если они маловероятны.", func: "Ne" },
+            { text: "Вы предпочитаете логично структурированные планы и системы, чем хаотичный процесс.", func: "Te" },
+            { text: "Вам не все равно, если кто-то рядом переживает или чувствует себя плохо.", func: "Fe" },
+            { text: "Вам интересно разбираться в сложных идеях и концепциях.", func: "Ti" },
+            { text: "Вы часто анализируете, почему испытываете те или иные эмоции.", func: "Fi" },
+            { text: "Вы любите думать о том, как разные события могли бы сложиться по-другому.", func: "Ne" },
+            { text: "Вы предпочитаете изучать прошлые ошибки, чтобы не повторять их в будущем.", func: "Si" },
+            { text: "Вы часто размышляете о том, как работают разные вещи или идеи.", func: "Ti" },
+            { text: "Вы обращаете внимание на детали вокруг себя, которые другие могут не заметить.", func: "Se" },
+            { text: "Вам проще воспринимать информацию, если она представлена в виде структурированных фактов и данных.", func: "Te" },
+            { text: "Вы часто вспоминаете прошлый опыт, чтобы решить, как поступить сейчас.", func: "Si" },
+            { text: "Вы склонны часто рассматривать новые идеи, даже если не знаете, как их реализовать.", func: "Ne" },
+            { text: "Вы стараетесь подстраиваться под эмоции окружающих, чтобы им было комфортно.", func: "Fe" },
+            { text: "Вы цените свою индивидуальность и стараетесь быть верным себе.", func: "Fi" },
+            { text: "Вам важны материальные аспекты жизни: комфорт, внешний вид, качество вещей.", func: "Se" },
+            { text: "Вы предпочитаете жить «здесь и сейчас», а не строить долгосрочные планы.", func: "Se" },
+            { text: "Вы часто ощущаете, что понимаете, как будут развиваться события в будущем, даже если не можете полностью это объяснить.", func: "Ni" }
+        ];
+
+        // Создаем вопросы в HTML
+        const quizContainer = document.getElementById('quiz');
+        questions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <p><strong>${index + 1}. ${q.text}</strong></p>
+                <div class="options">
+                    <label class="option"><input type="radio" name="q${index}" value="3" data-func="${q.func}"> Да (3 балла)</label>
+                    <label class="option"><input type="radio" name="q${index}" value="2" data-func="${q.func}"> Скорее да (2)</label>
+                    <label class="option"><input type="radio" name="q${index}" value="1" data-func="${q.func}"> Скорее нет (1)</label>
+                    <label class="option"><input type="radio" name="q${index}" value="0" data-func="${q.func}"> Нет (0)</label>
+                </div>
+            `;
+            quizContainer.appendChild(questionDiv);
+        });
+
+        // Алгоритм определения типа (как в вашем описании)
+        function determineType(sortedFunctions, scores) {
+            // Карта всех 16 типов и их функций
+            const typeMap = {
+                "ISTJ": ["Si", "Te", "Fi", "Ne"],
+                "ISFJ": ["Si", "Fe", "Ti", "Ne"],
+                "INFJ": ["Ni", "Fe", "Ti", "Se"],
+                "INTJ": ["Ni", "Te", "Fi", "Se"],
+                "ISTP": ["Ti", "Se", "Ni", "Fe"],
+                "ISFP": ["Fi", "Se", "Ni", "Te"],
+                "INFP": ["Fi", "Ne", "Si", "Te"],
+                "INTP": ["Ti", "Ne", "Si", "Fe"],
+                "ESTP": ["Se", "Ti", "Fe", "Ni"],
+                "ESFP": ["Se", "Fi", "Te", "Ni"],
+                "ENFP": ["Ne", "Fi", "Te", "Si"],
+                "ENFJ": ["Fe", "Ni", "Se", "Ti"],
+                "ENTP": ["Ne", "Ti", "Fe", "Si"],
+                "ENTJ": ["Te", "Ni", "Se", "Fi"],
+                "ESTJ": ["Te", "Si", "Ne", "Fi"],
+                "ESFJ": ["Fe", "Si", "Ne", "Ti"]
+            };
+
+            // Находим наиболее подходящий тип
+            let bestMatch = "";
+            let maxMatches = 0;
+
+            for (const [type, funcs] of Object.entries(typeMap)) {
+                let matches = 0;
+                for (let i = 0; i < 4; i++) {
+                    if (sortedFunctions[i] === funcs[i]) matches++;
+                }
+                if (matches > maxMatches) {
+                    maxMatches = matches;
+                    bestMatch = type;
+                }
+            }
+
+            return bestMatch || "Не удалось определить";
+        }
+
+        // Подсчет результата
+        function calculateResult() {
+            const scores = { Te: 0, Ti: 0, Fe: 0, Fi: 0, Se: 0, Si: 0, Ne: 0, Ni: 0 };
+            
+            // Считаем баллы
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                const func = input.getAttribute('data-func');
+                const value = parseInt(input.value);
+                scores[func] += value;
+            });
+
+            // Сортируем функции по убыванию баллов
+            const sortedFunctions = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+            
+            // Определяем тип по алгоритму
+            const type = determineType(sortedFunctions, scores);
+            
+            // Формируем результат
+            let resultHTML = `
+                <h2>Ваш тип: <strong>${type}</strong></h2>
+                <p><strong>Функциональный стек:</strong></p>
+                <ol>
+                    <li>${sortedFunctions[0]} (${scores[sortedFunctions[0]]} баллов)</li>
+                    <li>${sortedFunctions[1]} (${scores[sortedFunctions[1]]} баллов)</li>
+                    <li>${sortedFunctions[2]} (${scores[sortedFunctions[2]]} баллов)</li>
+                    <li>${sortedFunctions[3]} (${scores[sortedFunctions[3]]} баллов)</li>
+                </ol>
+                <p><strong>Все баллы:</strong></p>
+                ${Object.entries(scores).map(([func, score]) => 
+                    `<div class="func-score">${func}: ${score}</div>`
+                ).join('')}
+            `;
+
+            document.getElementById('result').innerHTML = resultHTML;
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
